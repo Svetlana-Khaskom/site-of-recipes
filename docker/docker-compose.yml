@@ -1,0 +1,57 @@
+version: '3.7'
+services:
+  code:
+    image: debian:jessie
+    volumes:
+    - ../:/var/www
+
+  php:
+    build: php
+    image: php:7.2-fpm
+    environment:
+    - DEVELOPER_HOST=70.10.0.1
+    - DEVELOPER_PORT=9000
+    volumes:
+    - ../:/var/www
+    - code
+    working_dir: /var/www
+    links:
+    - mysql
+    networks:
+      jollyTeamProject:
+        ipv4_address: 70.10.0.102
+
+  nginx:
+    build: nginx
+    environment:
+    - SERVER_NAME=localhost
+    links:
+    - php:fpm
+    networks:
+      jollyTeamProject:
+        ipv4_address: 70.10.0.101
+    ports:
+    - "7010:80"
+    volumes:
+    - ../:/var/www
+    - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    - code
+    working_dir: /var/www
+
+  mysql:
+    image: mysql:5.7.19
+    environment:
+    - MYSQL_DATABASE=homestead_dev
+    - MYSQL_USER=dev
+    - MYSQL_PASSWORD=devpass
+    - MYSQL_ROOT_PASSWORD=rootpass
+    networks:
+      jollyTeamProject:
+        ipv4_address: 70.10.0.103
+
+networks:
+  jollyTeamProject:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 70.10.0.0/24
